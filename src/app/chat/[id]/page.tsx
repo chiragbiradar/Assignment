@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import ChatArea from '@/components/ChatArea';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 
 // Add a utility function to check if we're on the client side
 const isClient = typeof window !== 'undefined';
 
-export default function Home() {
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+export default function ChatPage({ params }: { params: { id: string } }) {
+  // Use React.use to unwrap params
+  const unwrappedParams = use(params);
+  const { id } = unwrappedParams;
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -23,12 +26,11 @@ export default function Home() {
 
     if (!loading) {
       if (!user) {
-        console.log("No user found in home page, redirecting to login");
-
+        console.log("No user found in chat page, redirecting to login");
         // Use direct navigation for more reliable redirection
         window.location.href = '/login';
       } else {
-        console.log("User authenticated in home page:", user.email);
+        console.log("User authenticated in chat page:", user.email);
 
         // Check if we have a stored mock session
         try {
@@ -53,22 +55,13 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-white relative">
+    <div className="flex h-screen bg-white relative chat-container">
       {/* Sidebar with navigation and chat list */}
-      <Sidebar onChatSelect={setSelectedChatId} />
+      <Sidebar onChatSelect={(chatId) => router.push(`/chat/${chatId}`)} />
 
       {/* Chat area - takes remaining space */}
       <div className="flex-1 h-full">
-        {selectedChatId ? (
-          <ChatArea chatId={selectedChatId} />
-        ) : (
-          <div className="h-full flex items-center justify-center bg-gray-50">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-700">Welcome to WhatsApp</h2>
-              <p className="mt-2 text-gray-500">Select a chat to start messaging</p>
-            </div>
-          </div>
-        )}
+        <ChatArea chatId={id} />
       </div>
 
       {/* Floating action button */}

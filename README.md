@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WhatsApp Clone
+
+A WhatsApp clone built with Next.js, Tailwind CSS, and Supabase.
+
+## Features
+
+- Real-time messaging
+- User authentication
+- Chat list with search and filtering
+- Message status indicators
+- Offline support with IndexedDB
+- Responsive design
+- Chat labels
+- Group chats
+
+## Tech Stack
+
+- **Frontend**: Next.js, TypeScript, Tailwind CSS, React Icons
+- **Backend**: Supabase (Authentication, Database, Storage, Realtime)
+- **Offline Storage**: Dexie.js (IndexedDB wrapper)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ and npm
+- Supabase account
+
+### Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create a Supabase project:
+   - Go to [Supabase](https://supabase.com) and create a new project
+   - Get your project URL and anon key from the API settings
+
+3. Set up environment variables:
+   - Create a `.env.local` file in the root directory
+   - Add the following variables:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+4. Set up the database:
+   - Go to the SQL Editor in your Supabase dashboard
+   - Run the SQL script from `supabase/schema.sql`
+
+5. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Schema
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application uses the following database tables:
 
-## Learn More
+- **users**: User profiles
+- **chats**: Chat rooms
+- **messages**: Individual messages
+- **chat_participants**: Links users to chats
+- **labels**: Chat labels
+- **chat_labels**: Links labels to chats
 
-To learn more about Next.js, take a look at the following resources:
+## Authentication
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The application uses Supabase Authentication with email/password login. When a user signs up:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. A new auth user is created
+2. A corresponding record is added to the `users` table
+3. The user is redirected to the login page
 
-## Deploy on Vercel
+## Real-time Messaging
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Real-time messaging is implemented using Supabase Realtime:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Messages are stored in the `messages` table
+2. The application subscribes to changes on the `messages` table
+3. When a new message is inserted, it's immediately displayed to all participants
+
+## Offline Support
+
+Offline support is implemented using Dexie.js:
+
+1. Messages are stored locally in IndexedDB
+2. When offline, messages are marked as "not synced"
+3. When the connection is restored, unsynchronized messages are sent to the server
+
+## Deployment
+
+To deploy the application to production:
+
+1. Build the application:
+
+```bash
+npm run build
+```
+
+2. Start the production server:
+
+```bash
+npm start
+```
+
+Alternatively, you can deploy to Vercel:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fwhatsapp-clone)
