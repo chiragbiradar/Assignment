@@ -1,12 +1,21 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
+import { supabase, DEFAULT_USER } from '@/lib/supabase';
 import { Message, User } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import Image from 'next/image';
-import { FiSend, FiPaperclip, FiMic, FiSmile, FiMoreVertical, FiSearch } from 'react-icons/fi';
+import { FiPaperclip, FiMic, FiSmile, FiMoreVertical, FiSearch, FiHelpCircle, FiSettings } from 'react-icons/fi';
+import { GrAttachment } from 'react-icons/gr';
+import { BsEmojiSmile, BsChevronUp, BsChatDotsFill } from 'react-icons/bs';
+import { FaRegClock, FaMicrophone, FaListUl } from 'react-icons/fa6';
+import { AiOutlineHistory } from 'react-icons/ai';
+import { HiOutlineSparkles } from 'react-icons/hi';
+import { PiTextAlignLeftFill } from 'react-icons/pi';
+import { IoInformationCircleOutline, IoSend } from 'react-icons/io5';
+import { MdOutlineInstallDesktop } from 'react-icons/md';
+import { BiSolidBellOff } from 'react-icons/bi';
+import { TbStarsFilled, TbLayoutSidebarLeftExpandFilled } from 'react-icons/tb';
 import { v4 as uuidv4 } from 'uuid';
 
 type ChatInfo = {
@@ -18,18 +27,35 @@ type ChatInfo = {
   }[];
 };
 
-export default function ChatArea({ chatId }: { chatId: string }) {
+export default function ChatArea({ chatId, hideTopNav = false }: { chatId: string, hideTopNav?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const user = DEFAULT_USER;
+  const userPresence = {};
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Handle clicking outside of dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Fetch chat info and messages
   useEffect(() => {
@@ -234,54 +260,61 @@ export default function ChatArea({ chatId }: { chatId: string }) {
   }
 
   return (
-    <div className="h-full flex flex-col relative chat-container">
-      {/* Chat header */}
-      <div className="px-3 py-2 flex items-center justify-between border-b bg-gray-50 top-navbar">
-        <div className="flex items-center">
-          <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-200 mr-3">
-            {chatInfo.participants && chatInfo.participants[0]?.user?.avatar_url ? (
-              <Image
-                src={chatInfo.participants[0].user.avatar_url}
-                alt={chatInfo.name}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-xl font-semibold">
-                {chatInfo.name?.charAt(0) || '?'}
-              </div>
-            )}
+    <div className="h-full flex flex-col" style={{ position: 'relative' }}>
+      {/* Chat header - second highest z-index - only show if hideTopNav is false */}
+      {!hideTopNav && (
+        <div className="px-3 py-2 flex items-center justify-between border-b bg-gray-50" style={{ position: 'relative', zIndex: 40 }}>
+          <div className="flex items-center">
+            <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-200 mr-3">
+              {chatInfo.participants && chatInfo.participants[0]?.user?.avatar_url ? (
+                <Image
+                  src={chatInfo.participants[0].user.avatar_url}
+                  alt={chatInfo.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-xl font-semibold">
+                  {chatInfo.name?.charAt(0) || '?'}
+                </div>
+              )}
+            </div>
+            <div>
+              <h2 className="text-sm font-medium text-gray-900">{chatInfo.name}</h2>
+              <p className="text-xs text-gray-500 flex items-center">
+                {chatInfo.is_group
+                  ? `${chatInfo.participants?.length || 0} participants`
+                  : 'Roshang Artel, Roshang Jio, Bharat Kumar Ramesh, Periskope'}
+                {!chatInfo.is_group && chatInfo.participants && chatInfo.participants.length > 0 && (
+                  <span className="ml-2 flex items-center">
+                    <span className="text-xs text-gray-400">last seen recently</span>
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-medium text-gray-900">{chatInfo.name}</h2>
-            <p className="text-xs text-gray-500 flex items-center">
-              {chatInfo.is_group
-                ? `${chatInfo.participants?.length || 0} participants`
-                : 'Roshang Artel, Roshang Jio, Bharat Kumar Ramesh, Periskope'}
-            </p>
+          <div className="flex space-x-3">
+            <button className="text-gray-500 hover:text-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </button>
+            <button className="text-gray-500 hover:text-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+            <button className="text-gray-500 hover:text-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
           </div>
         </div>
-        <div className="flex space-x-3">
-          <button className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </button>
-          <button className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-          <button className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      )}
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100 right-sidebar">
+      {/* Messages area - lower z-index */}
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-100" style={{ position: 'relative', zIndex: 30 }}>
         {Object.entries(groupedMessages).map(([date, msgs]) => (
           <div key={date}>
             <div className="flex justify-center my-3">
@@ -317,9 +350,17 @@ export default function ChatArea({ chatId }: { chatId: string }) {
                   <div className="text-right mt-1 flex items-center justify-end">
                     <span className="text-xs text-gray-500">{formatTime(message.created_at)}</span>
                     {message.sender_id === user?.id && (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <>
+                        {message.is_read ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -330,53 +371,94 @@ export default function ChatArea({ chatId }: { chatId: string }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message input */}
-      <div className="p-2 border-t bg-white relative right-sidebar">
-        <div className="flex items-center">
-          <div className="flex space-x-2 mr-2">
-            <button className="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-            <button className="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-              </svg>
-            </button>
-            <button className="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+      {/* Message input - lower z-index */}
+      <div className="p-2 border-t bg-white" style={{ position: 'relative', zIndex: 30 }}>
+        <div className="flex flex-col">
+          {/* Text area and send button */}
+          <div className="flex items-center mb-2">
+            <textarea
+              placeholder="Message..."
+              className="flex-1 py-2 px-4 rounded-md bg-white border border-gray-200 focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-none"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
+              rows={1}
+              style={{ minHeight: '40px', maxHeight: '120px' }}
+            />
+            <button
+              className="ml-2 text-green-500 hover:text-green-600 transition-colors"
+              onClick={sendMessage}
+            >
+              <IoSend className="h-6 w-6" />
             </button>
           </div>
-          <input
-            type="text"
-            placeholder="Message..."
-            className="flex-1 py-2 px-4 rounded-md bg-white border border-gray-200 focus:ring-1 focus:ring-green-500 focus:border-green-500"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-          />
-          <button
-            className="ml-2 w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white"
-            onClick={sendMessage}
-          >
-            {newMessage.trim() ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            )}
-          </button>
+
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-2">
+            <div className="flex space-x-4">
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <GrAttachment className="h-5 w-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <BsEmojiSmile className="h-5 w-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <FaRegClock className="h-5 w-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <AiOutlineHistory className="h-5 w-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <HiOutlineSparkles className="h-5 w-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <PiTextAlignLeftFill className="h-5 w-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                <FaMicrophone className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* WhatsApp branding at bottom right */}
-        <div className="absolute bottom-2 right-3 flex items-center text-xs text-gray-400">
-          <span className="mr-1">Periskope</span>
+        {/* Periskope branding with dropdown at bottom right */}
+        <div className="absolute bottom-2 right-3 z-40" ref={dropdownRef}>
+          <button
+            className="flex items-center text-xs text-gray-400 hover:text-gray-600 transition-colors focus:outline-none border border-gray-200 rounded-md px-2 py-1 shadow-sm hover:shadow-md"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
+            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mr-1">
+              <span className="text-white text-[8px] font-bold">P</span>
+            </div>
+            <span className="mr-1">Periskope</span>
+            <BsChevronUp className={`h-3 w-3 transition-transform ${dropdownOpen ? '' : 'transform rotate-180'}`} />
+          </button>
+
+          {/* Dropdown menu */}
+          {dropdownOpen && (
+            <div className="absolute bottom-6 right-0 bg-white rounded-md shadow-lg border border-gray-200 py-1 w-48">
+              <ul>
+                <li>
+                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <IoInformationCircleOutline className="mr-2 h-4 w-4" />
+                    About Periskope
+                  </button>
+                </li>
+                <li>
+                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <FiSettings className="mr-2 h-4 w-4" />
+                    Settings
+                  </button>
+                </li>
+                <li>
+                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <FiHelpCircle className="mr-2 h-4 w-4" />
+                    Help
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

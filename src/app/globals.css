@@ -25,28 +25,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Z-index hierarchy for chat components */
-.left-sidebar {
-  z-index: 50 !important;
-  position: relative;
-}
-
-.top-navbar {
-  z-index: 40 !important;
-  position: relative;
-}
-
-.right-sidebar {
-  z-index: 30 !important;
-  position: relative;
-}
-
-.chat-container {
-  position: relative;
-  isolation: isolate;
-}
-
-/* Fix for stacking context */
+/* Basic layout fixes */
 body {
   overflow: hidden;
 }
