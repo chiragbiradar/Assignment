@@ -514,7 +514,7 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
 
   return (
     <div className="h-full flex" style={{ position: 'relative' }}>
-      {/* Left navigation bar - highest z-index */}
+      {/* Left navigation bar - highest z-index (80) */}
       <div className="w-14 bg-gray-100 flex flex-col items-center py-4 border-r" style={{ position: 'relative', zIndex: 80 }}>
         <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mb-6">
           <Image
