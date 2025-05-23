@@ -1,4 +1,4 @@
-# whatsapp Clone
+# Periskope Clone
 
 A comprehensive whatsapp clone built with Next.js, Tailwind CSS, and Supabase, featuring real-time messaging, offline support, and a modern UI.
 
@@ -13,8 +13,6 @@ A comprehensive whatsapp clone built with Next.js, Tailwind CSS, and Supabase, f
 - **Real-time Messaging**: Instant message delivery using Supabase Realtime
 - **1-to-1 Chats**: Private conversations between two users
 - **Group Chats**: Conversations with multiple participants
-- **Message Status Indicators**: Read/unread status for messages
-- **Typing Indicators**: Shows when someone is typing (visual feedback)
 - **Message Timestamps**: Time display for all messages
 
 ### Attachments
@@ -24,13 +22,11 @@ A comprehensive whatsapp clone built with Next.js, Tailwind CSS, and Supabase, f
 - **Audio Attachments**: Send and play audio files
 - **Document Attachments**: Share documents with other users
 - **Attachment Preview**: Preview attachments before sending
-- **Drag & Drop Support**: Easy file uploading via drag and drop
 
 ### Offline Support
 - **IndexedDB Storage**: Local message storage using Dexie.js
 - **Offline Message Queue**: Send messages while offline
 - **Automatic Sync**: Messages sync when connection is restored
-- **Offline Indicator**: Visual indicator when device is offline
 - **Seamless Experience**: Continue using the app without internet
 
 ### UI Components
@@ -41,7 +37,6 @@ A comprehensive whatsapp clone built with Next.js, Tailwind CSS, and Supabase, f
 - **Group/Contact Info Bar**: Display information about current chat
 - **Floating Action Button**: Quick access to create new chats
 - **Dropdown Menus**: Clean UI with dropdown functionality
-- **Dark Mode Support**: Respects system color scheme preferences
 
 ### Navigation & Layout
 - **Z-index Hierarchy**: Proper layering of UI components
@@ -53,34 +48,18 @@ A comprehensive whatsapp clone built with Next.js, Tailwind CSS, and Supabase, f
 
 ### Chat Management
 - **Chat Creation**: Create new individual or group chats
-- **Chat Search**: Search for specific chats by name or content
-- **Chat Filtering**: Filter chats by labels or status
-- **Chat Labels**: Organize chats with custom labels
-- **Unread Indicators**: Visual indicators for unread messages
 - **Last Message Preview**: Shows the last message in chat list
 
 ### User Experience
-- **Toast Notifications**: Non-intrusive notifications using react-hot-toast
 - **Loading States**: Visual feedback during loading operations
 - **Error Handling**: Graceful error handling with user feedback
-- **Optimistic Updates**: UI updates before server confirmation for better UX
-- **Smooth Transitions**: Subtle animations for a polished feel
 
-### Recent UI Enhancements
-- **Dropdown Menus**: Added to the "More" icon in RightSidebar and list button in top navigation
-- **Logout Functionality**: Moved from standalone button to dropdown menus for cleaner UI
-- **List Button Dropdown**: Added options like Filter Chats, Manage Users, Settings, and Logout
-- **Reduced Button Clutter**: Streamlined UI by consolidating actions into dropdown menus
-- **Subtle Visual Indicators**: Notification dots and status indicators
-- **Consistent Styling**: Uniform button and dropdown styles across the application
-- **Improved Avatar Display**: Better handling of user avatars in group chats
-- **Participant Display**: Shows first participant name followed by +X for group chats
 
 ## Tech Stack
 
 - **Frontend**:
   - Next.js 15.3.2 with App Router
-  - TypeScript for type safety
+  - TypeScript
   - Tailwind CSS 4 for styling
   - React 19 for UI components
   - React Icons for iconography
@@ -168,7 +147,3 @@ npm run build
 ```bash
 npm start
 ```
-
-Alternatively, you can deploy to Vercel:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fwhatsapp-clone)
