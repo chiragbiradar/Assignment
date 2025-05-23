@@ -55,7 +55,7 @@ const createFallbackChats = (currentUser: User): ChatWithLastMessage[] => {
   return [
     {
       id: uuidv4(),
-      name: 'Welcome to Periskope Clone',
+      name: 'Welcome to whatsapp Clone',
       is_group: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -314,8 +314,8 @@ export default function Sidebar({ onChatSelect, hideTopNav = false, selectedChat
       <div className="w-14 bg-gray-100 flex flex-col items-center py-4 border-r" style={{ position: 'relative', zIndex: 90 }}>
         <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mb-6">
           <Image
-            src="/Periskope-logo.svg"
-            alt="Periskope"
+            src="/whatsapp-logo.svg"
+            alt="whatsapp"
             width={20}
             height={20}
           />

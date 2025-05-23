@@ -1,6 +1,6 @@
-# Supabase Edge Functions for Periskope Clone
+# Supabase Edge Functions for whatsapp Clone
 
-This document outlines the Edge Functions that can be implemented to enhance the Periskope clone application. Edge Functions are serverless functions that run on Supabase's edge network, allowing you to execute server-side code without managing servers.
+This document outlines the Edge Functions that can be implemented to enhance the whatsapp clone application. Edge Functions are serverless functions that run on Supabase's edge network, allowing you to execute server-side code without managing servers.
 
 ## Prerequisites
 

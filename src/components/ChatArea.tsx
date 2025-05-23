@@ -21,6 +21,7 @@ import GroupContactInfoBar from './GroupContactInfoBar';
 import AttachmentUploader, { AttachmentFile } from './AttachmentUploader';
 import MessageAttachment from './MessageAttachment';
 import { uploadAttachment, getFileType } from '@/lib/fileUpload';
+import { handleSupabaseError } from '@/utils/errorHandling';
 
 type ChatInfo = {
   id: string;
@@ -114,7 +115,15 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
           .single();
 
         if (chatError) {
-          console.error('Error fetching chat info:', chatError);
+          handleSupabaseError(chatError, 'Error fetching chat info', () => {
+            // Create a default chat info as fallback
+            setChatInfo({
+              id: chatId,
+              name: 'Chat',
+              is_group: false,
+              participants: []
+            });
+          });
           setLoading(false);
           return;
         }
@@ -171,9 +180,10 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
           .order('created_at', { ascending: true });
 
         if (messagesError) {
-          console.error('Error fetching messages:', messagesError);
-          // Continue with empty messages array instead of returning
-          setMessages([]);
+          handleSupabaseError(messagesError, 'Error fetching messages', () => {
+            // Continue with empty messages array as fallback
+            setMessages([]);
+          });
           setLoading(false);
         } else {
           console.log('Found', messagesData?.length || 0, 'messages');
@@ -209,7 +219,16 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
           }
         }
       } catch (error) {
-        console.error('Error in fetchChatInfo:', error);
+        handleSupabaseError(error, 'Error in fetchChatInfo', () => {
+          // Create a default chat info as fallback
+          setChatInfo({
+            id: chatId,
+            name: 'Chat',
+            is_group: false,
+            participants: []
+          });
+          setMessages([]);
+        });
         setLoading(false);
       }
     };
@@ -496,7 +515,7 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
               <p className="text-xs text-gray-500 flex items-center">
                 {chatInfo.is_group
                   ? `${chatInfo.participants?.length || 0} participants`
-                  : 'Roshang Artel, Roshang Jio, Bharat Kumar Ramesh, Periskope'}
+                  : 'Roshang Artel, Roshang Jio, Bharat Kumar Ramesh, whatsapp'}
                 {!chatInfo.is_group && chatInfo.participants && chatInfo.participants.length > 0 && (
                   <span className="ml-2 flex items-center">
                     <span className="text-xs text-gray-400">last seen recently</span>
@@ -622,7 +641,7 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
           <div className="flex items-center mb-2">
             <textarea
               placeholder="Message..."
-              className="flex-1 py-2 px-4 rounded-md bg-white border border-gray-200 focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-none"
+              className="flex-1 py-2 px-4 rounded-md bg-white border border-gray-200 text-gray-900 focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-none"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
@@ -678,7 +697,7 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
           </div>
         </div>
 
-        {/* Periskope branding with dropdown at bottom right */}
+        {/* whatsapp branding with dropdown at bottom right */}
         <div className="absolute bottom-2 right-3 z-40" ref={dropdownRef}>
           <button
             className="flex items-center text-xs text-gray-400 hover:text-gray-600 transition-colors focus:outline-none border border-gray-200 rounded-md px-2 py-1 shadow-sm hover:shadow-md"
@@ -687,7 +706,7 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
             <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mr-1">
               <span className="text-white text-[8px] font-bold">P</span>
             </div>
-            <span className="mr-1">Periskope</span>
+            <span className="mr-1">whatsapp</span>
             <BsChevronUp className={`h-3 w-3 transition-transform ${dropdownOpen ? '' : 'transform rotate-180'}`} />
           </button>
 
@@ -698,7 +717,7 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
                 <li>
                   <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                     <IoInformationCircleOutline className="mr-2 h-4 w-4" />
-                    About Periskope
+                    About whatsapp
                   </button>
                 </li>
                 <li>

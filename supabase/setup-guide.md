@@ -1,12 +1,12 @@
-# Supabase Setup Guide for Periskope Clone
+# Supabase Setup Guide for whatsapp Clone
 
-This guide provides step-by-step instructions for setting up your Supabase project for the Periskope clone application.
+This guide provides step-by-step instructions for setting up your Supabase project for the whatsapp clone application.
 
 ## 1. Create a Supabase Project
 
 1. Go to [Supabase](https://supabase.com) and sign in or create an account
 2. Click "New Project"
-3. Enter a name for your project (e.g., "Periskope Clone")
+3. Enter a name for your project (e.g., "whatsapp Clone")
 4. Set a secure database password (save this for future reference)
 5. Choose a region closest to your users
 6. Click "Create new project"

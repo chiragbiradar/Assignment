@@ -218,14 +218,13 @@ export default function HomeClient({ user }: { user: User }) {
         <RightSidebar />
       </div>
 
-      {/* Floating action button - positioned at the bottom of left sidebar */}
+      {/* Floating action button - positioned at the bottom right of the screen */}
       <div
         style={{
           position: 'fixed',
-          bottom: '1.5rem',
-          left: '20rem',
-          transform: 'translateX(-50%)',
-          zIndex: 70 // Lower z-index to prevent overlapping with other elements
+          bottom: '2rem',
+          left: '19rem',
+          zIndex: 95 // Higher z-index to ensure visibility
         }}
         className="chat-fab-container"
       >

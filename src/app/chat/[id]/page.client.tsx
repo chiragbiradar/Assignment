@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import ChatArea from '@/components/ChatArea';
 import RightSidebar from '@/components/RightSidebar';
-import { TbMessageCirclePlus } from "react-icons/tb";
+import ChatFAB from '@/components/ChatFAB';
 import { User } from '@supabase/supabase-js';
 
 export default function ChatClient({ id, user }: { id: string, user: User }) {
@@ -25,11 +25,17 @@ export default function ChatClient({ id, user }: { id: string, user: User }) {
       {/* Right sidebar */}
       <RightSidebar />
 
-      {/* Floating action button - positioned at the bottom of left sidebar */}
-      <div style={{ position: 'absolute', bottom: '1.5rem', left: '3.5rem', transform: 'translateX(-50%)', zIndex: 75 }}>
-        <button className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg hover:bg-green-600 transition-colors">
-          <TbMessageCirclePlus className="h-6 w-6" />
-        </button>
+      {/* Floating action button - positioned at the bottom right of the screen */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          zIndex: 95 // Higher z-index to ensure visibility
+        }}
+        className="chat-fab-container"
+      >
+        <ChatFAB onChatCreated={(chatId) => router.push(`/chat/${chatId}`)} />
       </div>
     </div>
   );

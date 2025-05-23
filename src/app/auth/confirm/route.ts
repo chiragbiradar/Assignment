@@ -1,6 +1,7 @@
 import { type EmailOtpType } from '@supabase/supabase-js'
-import { type NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { type NextRequest } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -9,26 +10,17 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') ?? '/'
 
   if (token_hash && type) {
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-
-      const { error } = await supabase.auth.verifyOtp({
-        type,
-        token_hash,
-      })
-
-      if (!error) {
-        // Redirect user to specified redirect URL or root of app
-        return NextResponse.redirect(new URL(next, request.url))
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error)
+    const supabase = await createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      type,
+      token_hash,
+    })
+    if (!error) {
+      // redirect user to specified redirect URL or root of app
+      redirect(next)
     }
   }
 
-  // Redirect the user to an error page with some instructions
-  return NextResponse.redirect(new URL('/login?error=Could not verify email. Please try again.', request.url))
+  // redirect the user to our dedicated auth error page
+  redirect('/auth/error?error=Could not verify email. Please try again.')
 }

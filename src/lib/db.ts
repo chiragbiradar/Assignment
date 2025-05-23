@@ -9,7 +9,7 @@ export class ChatDatabase extends Dexie {
 
   constructor() {
     // Database name
-    super('PeriskopeClone');
+    super('whatsappClone');
 
     // Define the database schema with indexes
     this.version(1).stores({

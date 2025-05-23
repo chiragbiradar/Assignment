@@ -1,4 +1,4 @@
--- Periskope Clone - Complete Supabase Setup Script
+-- whatsapp Clone - Complete Supabase Setup Script
 -- Run this in the Supabase SQL Editor to set up all required database objects
 
 -- Enable necessary extensions

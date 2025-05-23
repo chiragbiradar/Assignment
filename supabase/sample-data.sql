@@ -1,4 +1,4 @@
--- Periskope Clone - Sample Data for Testing
+-- whatsapp Clone - Sample Data for Testing
 -- Run this script after setting up the database structure to populate it with test data
 
 -- Sample Users
@@ -42,7 +42,7 @@ BEGIN
   
   INSERT INTO users (id, email, full_name, avatar_url)
   VALUES
-    (user2_id, 'user2@example.com', 'Periskope', NULL)
+    (user2_id, 'user2@example.com', 'whatsapp', NULL)
   ON CONFLICT (id) DO NOTHING;
   
   INSERT INTO users (id, email, full_name, avatar_url)
@@ -82,9 +82,9 @@ BEGIN
   VALUES ('Test Skope Final 5', FALSE, NOW() - INTERVAL '20 days', NOW() - INTERVAL '2 days')
   RETURNING id INTO chat2_id;
   
-  -- Chat 3: Periskope Team Chat (Group)
+  -- Chat 3: whatsapp Team Chat (Group)
   INSERT INTO chats (name, is_group, created_at, updated_at)
-  VALUES ('Periskope Team Chat', TRUE, NOW() - INTERVAL '30 days', NOW() - INTERVAL '3 days')
+  VALUES ('whatsapp Team Chat', TRUE, NOW() - INTERVAL '30 days', NOW() - INTERVAL '3 days')
   RETURNING id INTO chat3_id;
   
   -- Chat 4: +91 99999 99999
@@ -137,7 +137,7 @@ BEGIN
     (chat2_id, user1_id),
     (chat2_id, user3_id);
   
-  -- Chat 3: Periskope Team Chat (Group)
+  -- Chat 3: whatsapp Team Chat (Group)
   INSERT INTO chat_participants (chat_id, user_id)
   VALUES 
     (chat3_id, user1_id),
@@ -192,7 +192,7 @@ BEGIN
   -- Add labels to chats
   INSERT INTO chat_labels (chat_id, label_id)
   VALUES
-    (chat3_id, label1_id),  -- Periskope Team Chat - Internal
+    (chat3_id, label1_id),  -- whatsapp Team Chat - Internal
     (chat4_id, label2_id),  -- +91 99999 99999 - Demo
     (chat4_id, label5_id),  -- +91 99999 99999 - Signup
     (chat5_id, label2_id),  -- Test Demo17 - Demo
@@ -217,10 +217,10 @@ BEGIN
   VALUES
     (chat2_id, user3_id, 'Support? This doesn''t go on Tuesday...', NOW() - INTERVAL '2 days 12 hours', TRUE);
   
-  -- Chat 3: Periskope Team Chat
+  -- Chat 3: whatsapp Team Chat
   INSERT INTO messages (chat_id, sender_id, content, created_at, is_read)
   VALUES
-    (chat3_id, user2_id, 'Periskope: Test message', NOW() - INTERVAL '3 days 8 hours', TRUE);
+    (chat3_id, user2_id, 'whatsapp: Test message', NOW() - INTERVAL '3 days 8 hours', TRUE);
   
   -- Chat 4: +91 99999 99999
   INSERT INTO messages (chat_id, sender_id, content, created_at, is_read)

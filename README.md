@@ -1,6 +1,6 @@
-# Periskope Clone
+# whatsapp Clone
 
-A comprehensive Periskope clone built with Next.js, Tailwind CSS, and Supabase, featuring real-time messaging, offline support, and a modern UI.
+A comprehensive whatsapp clone built with Next.js, Tailwind CSS, and Supabase, featuring real-time messaging, offline support, and a modern UI.
 
 ## Features
 
@@ -171,4 +171,4 @@ npm start
 
 Alternatively, you can deploy to Vercel:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2FPeriskope-clone)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fwhatsapp-clone)

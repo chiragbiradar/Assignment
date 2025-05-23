@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Periskope Clone",
-  description: "A Periskope clone built with Next.js, Tailwind CSS, and Supabase",
+  title: "whatsapp Clone",
+  description: "A whatsapp clone built with Next.js, Tailwind CSS, and Supabase",
 };
 
 export default function RootLayout({

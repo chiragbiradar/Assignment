@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/lib/supabase';
-import { FiSearch, FiX, FiUser } from 'react-icons/fi';
+import { FiSearch, FiX } from 'react-icons/fi';
 import { BsPersonCircle } from 'react-icons/bs';
 import Image from 'next/image';
 import { v4 as uuidv4 } from 'uuid';
@@ -270,7 +270,7 @@ export default function UserSelectionModal({
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="Enter a name for your group"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               autoFocus
             />
           </div>
@@ -285,7 +285,7 @@ export default function UserSelectionModal({
               placeholder="Search users by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               autoFocus={!isGroupSelection}
             />
           </div>

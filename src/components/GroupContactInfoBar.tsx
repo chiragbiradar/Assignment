@@ -77,12 +77,6 @@ export default function GroupContactInfoBar({
                         Group
                       </div>
                     )}
-                    <div className="px-1.5 py-0.5 rounded-md text-[9px] text-white font-medium bg-purple-500">
-                      Work
-                    </div>
-                    <div className="px-1.5 py-0.5 rounded-md text-[9px] text-white font-medium bg-green-500">
-                      Personal
-                    </div>
                   </div>
                 </div>
 
