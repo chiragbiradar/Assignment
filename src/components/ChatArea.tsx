@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { supabase, DEFAULT_USER } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Message, User } from '@/lib/supabase';
-import { db } from '@/lib/db';
+import { db, syncOfflineMessages } from '@/lib/db';
 import Image from 'next/image';
 import { FiPaperclip, FiMic, FiSmile, FiMoreVertical, FiSearch, FiHelpCircle, FiSettings } from 'react-icons/fi';
 import { GrAttachment } from 'react-icons/gr';
@@ -17,6 +17,10 @@ import { MdOutlineInstallDesktop } from 'react-icons/md';
 import { BiSolidBellOff } from 'react-icons/bi';
 import { TbStarsFilled, TbLayoutSidebarLeftExpandFilled } from 'react-icons/tb';
 import { v4 as uuidv4 } from 'uuid';
+import GroupContactInfoBar from './GroupContactInfoBar';
+import AttachmentUploader, { AttachmentFile } from './AttachmentUploader';
+import MessageAttachment from './MessageAttachment';
+import { uploadAttachment, getFileType } from '@/lib/fileUpload';
 
 type ChatInfo = {
   id: string;
@@ -33,7 +37,10 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const user = DEFAULT_USER;
+  const [user, setUser] = useState<any>(null);
+  const [selectedAttachment, setSelectedAttachment] = useState<AttachmentFile | null>(null);
+  const [showAttachmentUploader, setShowAttachmentUploader] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const userPresence = {};
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -57,169 +64,363 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
     };
   }, []);
 
+  // Get the current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUser(user);
+        } else {
+          console.error('No authenticated user found');
+        }
+      } catch (error) {
+        console.error('Error getting current user:', error);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
   // Fetch chat info and messages
   useEffect(() => {
     if (!chatId || !user) return;
 
     const fetchChatInfo = async () => {
       setLoading(true);
+      console.log('Fetching chat info for chat ID:', chatId);
 
-      // Get chat details
-      const { data: chatData, error: chatError } = await supabase
-        .from('chats')
-        .select(`
-          id,
-          name,
-          is_group,
-          chat_participants (
-            user:users (*)
-          )
-        `)
-        .eq('id', chatId)
-        .single();
+      try {
+        // Get chat details
+        const { data: chatData, error: chatError } = await supabase
+          .from('chats')
+          .select(`
+            id,
+            name,
+            is_group,
+            created_at,
+            updated_at,
+            chat_participants (
+              user_id,
+              users (
+                id,
+                full_name,
+                avatar_url,
+                email
+              )
+            )
+          `)
+          .eq('id', chatId)
+          .single();
 
-      if (chatError) {
-        console.error('Error fetching chat info:', chatError);
-        setLoading(false);
-        return;
-      }
-
-      // If no chat data is found, create a default chat info
-      if (!chatData) {
-        console.log('No chat data found, using default chat info');
-        setChatInfo({
-          id: chatId,
-          name: 'Chat',
-          is_group: false,
-          participants: []
-        });
-        setLoading(false);
-        return;
-      }
-
-      // If it's not a group chat and doesn't have a name, use the other participant's name
-      let chatName = chatData.name || 'Chat';
-      if (!chatData.is_group && !chatName) {
-        const otherParticipants = chatData.chat_participants
-          ?.filter((p: any) => p.user?.id !== user?.id)
-          ?.map((p: any) => p.user?.full_name || 'Unknown') || [];
-        chatName = otherParticipants.length > 0 ? otherParticipants.join(', ') : 'Chat';
-      }
-
-      setChatInfo({
-        id: chatData.id,
-        name: chatName,
-        is_group: chatData.is_group || false,
-        participants: chatData.chat_participants || []
-      });
-
-      // Get messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          chat_id,
-          sender_id,
-          content,
-          created_at,
-          is_read
-        `)
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        // Continue with empty messages array instead of returning
-        setMessages([]);
-        setLoading(false);
-      } else {
-        setMessages(messagesData || []);
-        setLoading(false);
-
-        // Mark messages as read
-        const unreadMessages = messagesData
-          ?.filter(m => !m.is_read && m.sender_id !== user.id)
-          .map(m => m.id) || [];
-
-        if (unreadMessages.length > 0) {
-          await supabase
-            .from('messages')
-            .update({ is_read: true })
-            .in('id', unreadMessages);
+        if (chatError) {
+          console.error('Error fetching chat info:', chatError);
+          setLoading(false);
+          return;
         }
+
+        // If no chat data is found, create a default chat info
+        if (!chatData) {
+          console.log('No chat data found, using default chat info');
+          setChatInfo({
+            id: chatId,
+            name: 'Chat',
+            is_group: false,
+            participants: []
+          });
+          setLoading(false);
+          return;
+        }
+
+        console.log('Chat data:', chatData);
+
+        // Get other participants (not the current user)
+        const otherParticipants = (chatData.chat_participants || [])
+          .filter(p => p.user_id !== user.id)
+          .map(p => ({
+            user: p.users
+          }));
+
+        // If it's not a group chat and doesn't have a name, use the other participant's name
+        let chatName = chatData.name;
+        if (!chatData.is_group && !chatName && otherParticipants.length > 0) {
+          chatName = otherParticipants[0].user.full_name;
+        }
+
+        setChatInfo({
+          id: chatData.id,
+          name: chatName || 'Chat',
+          is_group: chatData.is_group || false,
+          participants: chatData.chat_participants?.map(p => ({
+            user: p.users
+          })) || []
+        });
+
+        // Get messages
+        const { data: messagesData, error: messagesError } = await supabase
+          .from('messages')
+          .select(`
+            id,
+            chat_id,
+            sender_id,
+            content,
+            created_at,
+            is_read
+          `)
+          .eq('chat_id', chatId)
+          .order('created_at', { ascending: true });
+
+        if (messagesError) {
+          console.error('Error fetching messages:', messagesError);
+          // Continue with empty messages array instead of returning
+          setMessages([]);
+          setLoading(false);
+        } else {
+          console.log('Found', messagesData?.length || 0, 'messages');
+          setMessages(messagesData || []);
+          setLoading(false);
+
+          // Mark messages as read
+          const unreadMessages = messagesData
+            ?.filter(m => !m.is_read && m.sender_id !== user.id)
+            .map(m => m.id) || [];
+
+          if (unreadMessages.length > 0) {
+            console.log('Marking', unreadMessages.length, 'messages as read');
+            const { error: readError } = await supabase
+              .from('messages')
+              .update({ is_read: true })
+              .in('id', unreadMessages);
+
+            if (readError) {
+              console.error('Error marking messages as read:', readError);
+            } else {
+              console.log('Messages marked as read successfully');
+
+              // Update the messages in the local state to reflect read status
+              setMessages(prev =>
+                prev.map(msg =>
+                  unreadMessages.includes(msg.id)
+                    ? { ...msg, is_read: true }
+                    : msg
+                )
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetchChatInfo:', error);
+        setLoading(false);
       }
     };
 
     fetchChatInfo();
 
-    // Subscribe to new messages
-    const subscription = supabase
-      .channel(`chat:${chatId}`)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
-        payload => {
-          const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
+    // Subscribe to new messages and updates
+    console.log('Setting up real-time subscription for chat ID:', chatId);
 
-          // Mark message as read if it's not from the current user
-          if (newMessage.sender_id !== user.id) {
-            supabase
-              .from('messages')
-              .update({ is_read: true })
-              .eq('id', newMessage.id);
+    let subscription: any;
+
+    try {
+      subscription = supabase
+        .channel(`chat:${chatId}`)
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
+          payload => {
+            console.log('Received new message:', payload.new);
+            const newMessage = payload.new as Message;
+            setMessages(prev => {
+              // Check if message with this ID already exists
+              const exists = prev.some(msg => msg.id === newMessage.id);
+              if (exists) {
+                console.log(`Message with ID ${newMessage.id} already exists, not adding duplicate`);
+                return prev;
+              }
+              return [...prev, newMessage];
+            });
+
+            // Mark message as read if it's not from the current user
+            if (newMessage.sender_id !== user.id) {
+              console.log('Marking new message as read');
+              supabase
+                .from('messages')
+                .update({ is_read: true })
+                .eq('id', newMessage.id)
+                .then(({ error }) => {
+                  if (error) {
+                    console.error('Error marking message as read:', error);
+                  } else {
+                    console.log('Message marked as read successfully');
+
+                    // Update the message in the local state to reflect read status
+                    setMessages(prev =>
+                      prev.map(msg =>
+                        msg.id === newMessage.id ? { ...msg, is_read: true } : msg
+                      )
+                    );
+                  }
+                });
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
+          payload => {
+            console.log('Message updated:', payload.new);
+            // Update the message in the state
+            const updatedMessage = payload.new as Message;
+            setMessages(prev =>
+              prev.map(msg =>
+                msg.id === updatedMessage.id ? updatedMessage : msg
+              )
+            );
+          }
+        )
+        .subscribe((status: any) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Successfully subscribed to chat channel:', `chat:${chatId}`);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Error subscribing to chat channel:', `chat:${chatId}`);
+          }
+        });
+    } catch (error) {
+      console.error('Error setting up real-time subscription:', error);
+    }
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(subscription);
     };
   }, [chatId, user]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !user || !chatId) return;
+    if ((!newMessage.trim() && !selectedAttachment) || !user || !chatId) return;
+    if (sendingMessage) return;
 
+    setSendingMessage(true);
     const messageId = uuidv4();
     const now = new Date().toISOString();
 
-    // Optimistically add message to UI
-    const newMsg: Message = {
+    console.log('Sending message:', newMessage, selectedAttachment ? 'with attachment' : '');
+
+    // Prepare message object
+    let newMsg: Message = {
       id: messageId,
       chat_id: chatId,
       sender_id: user.id,
-      content: newMessage,
+      content: newMessage.trim(),
       created_at: now,
-      is_read: false
+      is_read: false,
+      has_attachment: !!selectedAttachment,
+      attachment_type: selectedAttachment ? getFileType(selectedAttachment.file) : undefined,
+      attachment_name: selectedAttachment?.file.name,
+      attachment_size: selectedAttachment?.file.size
     };
 
-    setMessages(prev => [...prev, newMsg]);
-    setNewMessage('');
-
     try {
+      // If there's an attachment, upload it first
+      if (selectedAttachment) {
+        // Update attachment status
+        setSelectedAttachment({
+          ...selectedAttachment,
+          uploading: true,
+          progress: 0
+        });
+
+        // Upload the file to Supabase Storage
+        const uploadResult = await uploadAttachment(
+          selectedAttachment.file,
+          chatId,
+          messageId,
+          (progress) => {
+            setSelectedAttachment(prev =>
+              prev ? { ...prev, progress } : null
+            );
+          }
+        );
+
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error || 'Failed to upload attachment');
+        }
+
+        // Update message with attachment URL
+        newMsg.attachment_url = uploadResult.url;
+
+        console.log('Attachment uploaded successfully:', uploadResult.url);
+      }
+
+      // Optimistically add message to UI
+      setMessages(prev => {
+        // Check if message with this ID already exists
+        const exists = prev.some(msg => msg.id === newMsg.id);
+        if (exists) {
+          console.log(`Message with ID ${newMsg.id} already exists, not adding duplicate`);
+          return prev;
+        }
+        return [...prev, newMsg];
+      });
+
+      setNewMessage('');
+      setSelectedAttachment(null);
+      setShowAttachmentUploader(false);
+
       // Store in local DB first (for offline support)
       await db.messages.add({
         ...newMsg,
         synced: navigator.onLine
       });
 
+      console.log('Message stored in local DB');
+
       // Send to Supabase if online
       if (navigator.onLine) {
+        console.log('Sending message to Supabase');
         const { error } = await supabase
           .from('messages')
           .insert(newMsg);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error inserting message into Supabase:', error);
+          throw error;
+        }
+
+        console.log('Message sent to Supabase successfully');
 
         // Update chat's updated_at timestamp
-        await supabase
+        const { error: updateError } = await supabase
           .from('chats')
           .update({ updated_at: now })
           .eq('id', chatId);
+
+        if (updateError) {
+          console.error('Error updating chat timestamp:', updateError);
+        } else {
+          console.log('Chat timestamp updated');
+        }
+
+        // Mark the message as synced in the local DB
+        await db.messages.update(messageId, { synced: true });
+        console.log('Message marked as synced in local DB');
+      } else {
+        console.log('Device is offline, message will be synced later');
+        // We'll sync this message when the device comes back online
+        window.addEventListener('online', async () => {
+          console.log('Device is back online, syncing pending messages');
+          await syncOfflineMessages(supabase);
+        }, { once: true });
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      // Could add error handling UI here
+      // Show error in attachment uploader if it's an attachment error
+      if (selectedAttachment) {
+        setSelectedAttachment({
+          ...selectedAttachment,
+          uploading: false,
+          error: 'Failed to upload attachment'
+        });
+      }
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -233,9 +434,20 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
     return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
   };
 
-  // Group messages by date
+  // Group messages by date and ensure no duplicates
   const groupedMessages: { [date: string]: Message[] } = {};
+  const processedMessageIds = new Set<string>();
+
   messages.forEach(message => {
+    // Skip if we've already processed this message ID
+    if (processedMessageIds.has(message.id)) {
+      console.log(`Skipping duplicate message with ID: ${message.id}`);
+      return;
+    }
+
+    // Add to processed set
+    processedMessageIds.add(message.id);
+
     const date = new Date(message.created_at).toDateString();
     if (!groupedMessages[date]) {
       groupedMessages[date] = [];
@@ -261,9 +473,9 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
 
   return (
     <div className="h-full flex flex-col" style={{ position: 'relative' }}>
-      {/* Chat header - second highest z-index - only show if hideTopNav is false */}
+      {/* Chat header - lower z-index than sidebar but higher than content - only show if hideTopNav is false */}
       {!hideTopNav && (
-        <div className="px-3 py-2 flex items-center justify-between border-b bg-gray-50" style={{ position: 'relative', zIndex: 40 }}>
+        <div className="px-3 py-2 flex items-center justify-between border-b bg-gray-50" style={{ position: 'relative', zIndex: 70 }}>
           <div className="flex items-center">
             <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-200 mr-3">
               {chatInfo.participants && chatInfo.participants[0]?.user?.avatar_url ? (
@@ -313,25 +525,46 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
         </div>
       )}
 
+      {/* Group/Contact Info Bar - positioned below navbar with lower z-index */}
+      <GroupContactInfoBar
+        groupName={chatInfo?.name || 'Test El Centro'}
+        participants={chatInfo?.participants?.map(p => ({
+          id: p.user.id,
+          full_name: p.user.full_name,
+          avatar_url: p.user.avatar_url
+        })) || []}
+        isGroup={chatInfo?.is_group || false}
+        onViewDetails={() => console.log('View details clicked')}
+      />
+
       {/* Messages area - lower z-index */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-100" style={{ position: 'relative', zIndex: 30 }}>
-        {Object.entries(groupedMessages).map(([date, msgs]) => (
-          <div key={date}>
+        {Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
+          <div key={`date-group-${date}-${dateIndex}`}>
             <div className="flex justify-center my-3">
               <div className="bg-white px-3 py-1 rounded-full text-xs text-gray-500">
                 {formatDate(date)}
               </div>
             </div>
-            {msgs.map((message) => (
+            {msgs.map((message, msgIndex) => (
               <div
-                key={message.id}
+                key={`msg-${message.id}-${msgIndex}`}
                 className={`flex mb-3 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
               >
                 {message.sender_id !== user?.id && (
                   <div className="w-8 h-8 relative rounded-full overflow-hidden bg-gray-200 mr-2 mt-1 flex-shrink-0">
-                    <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-sm font-semibold">
-                      R
-                    </div>
+                    {chatInfo?.participants?.find(p => p.user.id === message.sender_id)?.user.avatar_url ? (
+                      <Image
+                        src={chatInfo.participants.find(p => p.user.id === message.sender_id)?.user.avatar_url || ''}
+                        alt="User avatar"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-sm font-semibold">
+                        {chatInfo?.participants?.find(p => p.user.id === message.sender_id)?.user.full_name.charAt(0) || '?'}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div
@@ -343,10 +576,21 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
                 >
                   {message.sender_id !== user?.id && (
                     <div className="text-xs font-medium text-green-600 mb-1">
-                      Periskope
+                      {chatInfo?.participants?.find(p => p.user.id === message.sender_id)?.user.full_name || 'Unknown User'}
                     </div>
                   )}
-                  <div className="text-sm">{message.content}</div>
+                  {/* Attachment if present */}
+                  {message.has_attachment && (
+                    <MessageAttachment message={message} />
+                  )}
+
+                  {/* Message content */}
+                  {message.content && (
+                    <div className="text-sm whitespace-pre-wrap break-words">
+                      {message.content}
+                    </div>
+                  )}
+
                   <div className="text-right mt-1 flex items-center justify-end">
                     <span className="text-xs text-gray-500">{formatTime(message.created_at)}</span>
                     {message.sender_id === user?.id && (
@@ -393,10 +637,23 @@ export default function ChatArea({ chatId, hideTopNav = false }: { chatId: strin
             </button>
           </div>
 
+          {/* Attachment uploader */}
+          {showAttachmentUploader && (
+            <div className="mb-3">
+              <AttachmentUploader
+                onAttachmentSelect={setSelectedAttachment}
+                selectedAttachment={selectedAttachment}
+              />
+            </div>
+          )}
+
           {/* Toolbar */}
           <div className="flex items-center justify-between px-2">
             <div className="flex space-x-4">
-              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+              <button
+                className={`transition-colors ${showAttachmentUploader ? 'text-green-500' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setShowAttachmentUploader(!showAttachmentUploader)}
+              >
                 <GrAttachment className="h-5 w-5" />
               </button>
               <button className="text-gray-500 hover:text-gray-700 transition-colors">

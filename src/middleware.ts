@@ -1,31 +1,35 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server'
 
-// This middleware runs on every request
-export async function middleware(req: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Generate a unique request ID for debugging
   const requestId = Math.random().toString(36).substring(2, 8);
 
   // Log the incoming request with its ID
-  console.log(`[${requestId}] Middleware processing: ${req.method} ${req.nextUrl.pathname} (${new Date().toISOString()})`);
+  console.log(`[${requestId}] Middleware processing: ${request.method} ${request.nextUrl.pathname} (${new Date().toISOString()})`);
 
   // Get the pathname
-  const { pathname } = req.nextUrl;
+  const { pathname } = request.nextUrl;
 
   // Clean URL if it has cache buster parameters
-  if (req.nextUrl.searchParams.has('_cb') || req.nextUrl.searchParams.has('_t')) {
+  if (request.nextUrl.searchParams.has('_cb') || request.nextUrl.searchParams.has('_t')) {
     console.log(`[${requestId}] Detected query parameters, cleaning URL`);
-    const cleanUrl = new URL(pathname, req.url);
-    const response = NextResponse.redirect(cleanUrl);
-    return response;
+    const cleanUrl = new URL(pathname, request.url);
+    return NextResponse.redirect(cleanUrl);
   }
 
-  // For all cases, proceed normally without authentication checks
-  console.log(`[${requestId}] Proceeding normally with request`);
+  // Just pass through the request
   return NextResponse.next();
 }
 
-// Configure the middleware to run on specific paths
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };

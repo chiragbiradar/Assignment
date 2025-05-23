@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase, DEFAULT_USER } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Chat, User } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -44,294 +44,74 @@ type ChatWithLastMessage = Chat & {
 type SidebarProps = {
   onChatSelect?: (chatId: string) => void;
   hideTopNav?: boolean;
+  selectedChatId?: string;
 };
 
-// Function to create mock chats for development
-const createMockChats = (currentUser: User): ChatWithLastMessage[] => {
+// Function to create fallback chats if no chats are found
+const createFallbackChats = (currentUser: User): ChatWithLastMessage[] => {
   const now = new Date();
 
-  // Create mock chats to match the image
+  // Create a single fallback chat
   return [
     {
       id: uuidv4(),
-      name: 'Test El Centro',
-      is_group: true,
-      created_at: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      name: 'Welcome to Periskope Clone',
+      is_group: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       last_message: {
-        content: 'Hello, South Euna!',
-        created_at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        content: 'Click the + button to start a new chat',
+        created_at: new Date().toISOString(),
         sender: {
-          full_name: 'Roshang Artel'
+          full_name: 'System'
         }
       },
       participants: [
         {
           user: {
-            full_name: 'Roshang Artel',
-            avatar_url: null
-          }
-        },
-        {
-          user: {
-            full_name: 'Roshang Jio',
-            avatar_url: null
-          }
-        },
-        {
-          user: {
-            full_name: 'Bharat Kumar Ramesh',
-            avatar_url: null
-          }
-        },
-        {
-          user: {
-            full_name: 'Periskope',
+            full_name: 'System',
             avatar_url: null
           }
         }
       ],
       labels: [
         {
-          name: 'CVFER',
+          name: 'System',
           color: '#4CAF50'
         }
       ],
-      phone: '+91 99999 99999',
-      unread_count: 2
-    },
-    {
-      id: uuidv4(),
-      name: 'Test Skope Final 5',
-      is_group: false,
-      created_at: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'Support? This doesn\'t go on Tuesday...',
-        created_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Test Skope Final'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Test Skope Final 5',
-            avatar_url: null
-          }
-        }
-      ],
-      phone: '+91 99778 44598 +1',
-      unread_count: 1
-    },
-    {
-      id: uuidv4(),
-      name: 'Periskope Team Chat',
-      is_group: true,
-      created_at: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'Periskope: Test message',
-        created_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Periskope'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Periskope',
-            avatar_url: null
-          }
-        }
-      ],
-      labels: [
-        {
-          name: 'Demo',
-          color: '#FFC107'
-        },
-        {
-          name: 'Internal',
-          color: '#4CAF50'
-        }
-      ],
-      phone: '+91 99778 44598 +3',
-      unread_count: 0
-    },
-    {
-      id: uuidv4(),
-      name: '+91 99999 99999',
-      is_group: false,
-      created_at: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'Hi there, I\'m Swapnika, Co-Founder of...',
-        created_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Swapnika'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Swapnika',
-            avatar_url: null
-          }
-        }
-      ],
-      labels: [
-        {
-          name: 'Demo',
-          color: '#FFC107'
-        },
-        {
-          name: 'Signup',
-          color: '#2196F3'
-        }
-      ],
-      phone: '+91 99999 99999 +1',
-      unread_count: 0
-    },
-    {
-      id: uuidv4(),
-      name: 'Test Demo17',
-      is_group: false,
-      created_at: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'Rohosen 123',
-        created_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Test Demo17'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Test Demo17',
-            avatar_url: null
-          }
-        }
-      ],
-      labels: [
-        {
-          name: 'Content',
-          color: '#4CAF50'
-        },
-        {
-          name: 'Demo',
-          color: '#FFC107'
-        }
-      ],
-      phone: '+91 99778 44598 +1',
-      unread_count: 0
-    },
-    {
-      id: uuidv4(),
-      name: 'Test El Centro',
-      is_group: false,
-      created_at: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'Rohitagi Hello, Ahmadpur!',
-        created_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Test El Centro'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Test El Centro',
-            avatar_url: null
-          }
-        }
-      ],
-      labels: [
-        {
-          name: 'Demo',
-          color: '#FFC107'
-        }
-      ],
-      phone: '+91 99778 44598',
-      unread_count: 0
-    },
-    {
-      id: uuidv4(),
-      name: 'Testing group',
-      is_group: true,
-      created_at: new Date(now.getTime() - 70 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'Testing 12345',
-        created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Testing group'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Testing group',
-            avatar_url: null
-          }
-        }
-      ],
-      labels: [
-        {
-          name: 'Demo',
-          color: '#FFC107'
-        }
-      ],
-      phone: '+91 99999 99999',
-      unread_count: 0
-    },
-    {
-      id: uuidv4(),
-      name: 'Yasin 3',
-      is_group: false,
-      created_at: new Date(now.getTime() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-      last_message: {
-        content: 'First Bulk Message',
-        created_at: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-        sender: {
-          full_name: 'Yasin 3'
-        }
-      },
-      participants: [
-        {
-          user: {
-            full_name: 'Yasin 3',
-            avatar_url: null
-          }
-        }
-      ],
-      labels: [
-        {
-          name: 'Demo',
-          color: '#FFC107'
-        },
-        {
-          name: 'Dont Send',
-          color: '#F44336'
-        }
-      ],
-      phone: '+91 99778 44598 +3',
       unread_count: 0
     }
   ];
 };
 
-export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarProps) {
+export default function Sidebar({ onChatSelect, hideTopNav = false, selectedChatId }: SidebarProps) {
   const [chats, setChats] = useState<ChatWithLastMessage[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [customFilter, setCustomFilter] = useState('');
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
-  const user = DEFAULT_USER;
+  const [user, setUser] = useState<any>(null);
   const userPresence = {};
   const router = useRouter();
+
+  // Get the current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUser(user);
+        } else {
+          console.error('No authenticated user found');
+        }
+      } catch (error) {
+        console.error('Error getting current user:', error);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -348,23 +128,19 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
 
         if (participantError) {
           console.error('Error fetching chat participants:', participantError);
+          setChats(createFallbackChats(user));
           return;
         }
 
         // Check if participantData is defined and is an array
-        if (!participantData || !Array.isArray(participantData)) {
-          console.log("No chat participants found or using mock data");
-          // For development, create some mock chats
-          if (process.env.NODE_ENV === 'development') {
-            setChats(createMockChats(user));
-          }
+        if (!participantData || !Array.isArray(participantData) || participantData.length === 0) {
+          console.log("No chat participants found, using fallback chat");
+          setChats(createFallbackChats(user));
           return;
         }
 
         console.log("Found", participantData.length, "chats for user");
         const chatIds = participantData.map(p => p.chat_id);
-
-        if (chatIds.length === 0) return;
 
         // Get chat details with last message
         const { data: chatData, error: chatError } = await supabase
@@ -375,24 +151,21 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
             is_group,
             created_at,
             updated_at,
-            chat_participants!inner (
-              user:users (
+            chat_participants (
+              user_id,
+              users (
+                id,
                 full_name,
-                avatar_url
-              )
-            ),
-            chat_labels (
-              label:labels (
-                name,
-                color
+                avatar_url,
+                email
               )
             ),
             messages (
+              id,
               content,
               created_at,
-              sender:users (
-                full_name
-              )
+              sender_id,
+              is_read
             )
           `)
           .in('id', chatIds)
@@ -400,12 +173,14 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
 
         if (chatError) {
           console.error('Error fetching chats:', chatError);
+          setChats(createFallbackChats(user));
           return;
         }
 
         // Check if chatData is defined and is an array
-        if (!chatData || !Array.isArray(chatData)) {
-          console.log("No chat data found");
+        if (!chatData || !Array.isArray(chatData) || chatData.length === 0) {
+          console.log("No chat data found, using fallback chat");
+          setChats(createFallbackChats(user));
           return;
         }
 
@@ -414,35 +189,56 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
         // Process the data to get the last message for each chat
         const processedChats = chatData.map(chat => {
           const messages = chat.messages || [];
-          const lastMessage = messages.length > 0
-            ? messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
-            : undefined;
+
+          // Sort messages by created_at in descending order
+          const sortedMessages = [...messages].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+
+          const lastMessage = sortedMessages.length > 0 ? sortedMessages[0] : undefined;
+
+          // Get other participants (not the current user)
+          const otherParticipants = (chat.chat_participants || [])
+            .filter(p => p.user_id !== user.id)
+            .map(p => p.users);
+
+          // For 1-to-1 chats, use the other participant's name if chat name is null
+          let chatName = chat.name;
+          if (!chat.is_group && !chatName && otherParticipants.length > 0) {
+            chatName = otherParticipants[0].full_name;
+          }
+
+          // Count unread messages (not from current user and not read)
+          const unreadCount = messages.filter(
+            m => m.sender_id !== user.id && !m.is_read
+          ).length;
 
           // Format the chat data
           return {
             id: chat.id,
-            name: chat.name || chat.chat_participants
-              .filter(p => p.user.full_name !== user.full_name)
-              .map(p => p.user.full_name)
-              .join(', '),
+            name: chatName || 'Unnamed Chat',
             is_group: chat.is_group,
             created_at: chat.created_at,
             updated_at: chat.updated_at,
-            last_message: lastMessage,
-            participants: chat.chat_participants,
-            labels: chat.chat_labels?.map(cl => cl.label) || [],
-            unread_count: messages.filter(m => !m.is_read && m.sender?.id !== user.id).length
+            last_message: lastMessage ? {
+              content: lastMessage.content,
+              created_at: lastMessage.created_at,
+              sender: {
+                full_name: 'User' // We'll improve this later
+              }
+            } : undefined,
+            participants: chat.chat_participants?.map(p => ({
+              user: p.users
+            })) || [],
+            labels: [], // We'll add labels support later
+            unread_count: unreadCount
           };
         });
 
         setChats(processedChats);
       } catch (error) {
         console.error("Error in fetchChats:", error);
-        // For development, create some mock chats if there's an error
-        if (process.env.NODE_ENV === 'development') {
-          console.log("Using mock chats due to error");
-          setChats(createMockChats(user));
-        }
+        setChats(createFallbackChats(user));
       }
     };
 
@@ -515,22 +311,25 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
   return (
     <div className="h-full flex" style={{ position: 'relative' }}>
       {/* Left navigation bar - highest z-index */}
-      <div className="w-14 bg-gray-100 flex flex-col items-center py-4 border-r" style={{ position: 'relative', zIndex: 80 }}>
+      <div className="w-14 bg-gray-100 flex flex-col items-center py-4 border-r" style={{ position: 'relative', zIndex: 90 }}>
         <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mb-6">
           <Image
-            src="/whatsapp-logo.svg"
-            alt="WhatsApp"
+            src="/Periskope-logo.svg"
+            alt="Periskope"
             width={20}
             height={20}
           />
         </div>
         <div className="flex flex-col h-full">
           {/* Main icons */}
-          <div className="flex flex-col space-y-6 items-center">
+          <div className="flex flex-col space-y-3 items-center">
             {/* Home icon */}
             <button className="text-gray-500 hover:text-green-500">
               <IoHomeSharp className="h-4 w-4" />
             </button>
+            {/* Separator after Home icon */}
+            <div className="w-8 border-b border-gray-200 my-2"></div>
+
             {/* Chat icon */}
             <button className="text-green-500 hover:text-green-600">
               <IoChatbubbleEllipsesSharp className="h-4 w-4" />
@@ -543,6 +342,9 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
             <button className="text-gray-500 hover:text-green-500">
               <GoGraph className="h-4 w-4" />
             </button>
+            {/* Separator after Graph/Analytics icon */}
+            <div className="w-8 border-b border-gray-200 my-2"></div>
+
             {/* Announcement/Megaphone icon */}
             <button className="text-gray-500 hover:text-green-500">
               <HiMiniMegaphone className="h-4 w-4" />
@@ -555,10 +357,16 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
             <button className="text-gray-500 hover:text-green-500">
               <RiContactsBookFill className="h-4 w-4" />
             </button>
+            {/* Separator after Contacts icon */}
+            <div className="w-8 border-b border-gray-200 my-2"></div>
+
             {/* Media/Gallery icon */}
             <button className="text-gray-500 hover:text-green-500">
               <RiFolderImageFill className="h-4 w-4" />
             </button>
+            {/* Separator after Media/Gallery icon */}
+            <div className="w-8 border-b border-gray-200 my-2"></div>
+
             {/* Tasks icon */}
             <button className="text-gray-500 hover:text-green-500">
               <FaTasks className="h-4 w-4" />
@@ -584,7 +392,7 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
       </div>
 
       {/* Chat list sidebar - second highest z-index */}
-      <div className="w-80 flex flex-col bg-white border-r border-gray-200" style={{ position: 'relative', zIndex: 40 }}>
+      <div className="w-80 flex flex-col bg-white border-r border-gray-200" style={{ position: 'relative', zIndex: 80 }}>
         {/* Header - only show if hideTopNav is false */}
         {!hideTopNav && (
           <div className="px-3 py-2 flex items-center justify-between border-b bg-gray-50">
@@ -621,7 +429,7 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
               </button>
               <button className="text-gray-500 hover:text-gray-700 text-xs flex items-center border border-gray-200 rounded-md px-2 py-1 relative">
                 <div className="absolute -left-1 top-1/2 transform -translate-y-1/2">
-                  <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-yellow-300 rounded-full"></div>
                 </div>
                 <FaListUl className="h-3.5 w-3.5 mr-1" />
                 List
@@ -664,7 +472,9 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
           {filteredChats.map((chat) => (
             <div
               key={chat.id}
-              className="flex items-start p-3 border-b hover:bg-gray-50 cursor-pointer"
+              className={`flex items-start p-3 border-b hover:bg-gray-100 cursor-pointer transition-all ${
+                selectedChatId === chat.id ? 'bg-gray-50' : ''
+              }`}
               onClick={() => handleChatSelect(chat.id)}
             >
               <div className="relative mr-3">
@@ -695,47 +505,116 @@ export default function Sidebar({ onChatSelect, hideTopNav = false }: SidebarPro
                 )}
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xs font-medium text-gray-900 truncate">{chat.name}</h3>
-                  <span className="text-[10px] text-gray-500 whitespace-nowrap ml-1">
-                    {chat.last_message ? formatDate(chat.last_message.created_at) : ''}
-                  </span>
-                </div>
+              <div className="flex-1 min-w-0 flex flex-col">
+                {/* Top section with name and labels on the same line */}
+                <div className="mb-1.5 flex justify-between items-start">
+                  {/* Chat name with proper truncation */}
+                  <h3 className="text-xs font-medium text-gray-900 truncate max-w-[60%]">{chat.name}</h3>
 
-                {chat.is_group && (
-                  <div className="text-[10px] text-gray-400 truncate mt-0.5">
-                    {chat.participants?.map(p => p.user.full_name).join(', ')}
+                  {/* Labels at the top-right */}
+                  <div className="flex space-x-1 flex-wrap justify-end">
+                    {chat.labels && chat.labels.length > 0 ? (
+                      // Display actual chat labels if they exist
+                      chat.labels.map((label, index) => (
+                        <div
+                          key={index}
+                          className="px-1.5 py-0.5 rounded-md text-[10px] text-white font-medium shadow-sm"
+                          style={{ backgroundColor: label.color }}
+                        >
+                          {label.name}
+                        </div>
+                      ))
+                    ) : (
+                      // Display example tags if no labels exist
+                      <>
+                        {chat.is_group ? (
+                          <div className="px-1.5 py-0.5 rounded-md text-[10px] text-white font-medium bg-blue-500 shadow-sm">
+                            Group
+                          </div>
+                        ) : null}
+                        {Math.random() > 0.5 ? (
+                          <div className="px-1.5 py-0.5 rounded-md text-[10px] text-white font-medium bg-purple-500 shadow-sm">
+                            Work
+                          </div>
+                        ) : (
+                          <div className="px-1.5 py-0.5 rounded-md text-[10px] text-white font-medium bg-green-500 shadow-sm">
+                            Personal
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-                )}
-
-                <div className="text-[10px] text-gray-500 truncate mt-0.5">
-                  {chat.last_message ? (
-                    chat.is_group && chat.last_message.sender ?
-                      `${chat.last_message.sender.full_name}: ${chat.last_message.content}` :
-                      chat.last_message.content
-                  ) : 'No messages yet'}
                 </div>
 
-                {/* Phone number or additional info */}
-                <div className="flex items-center text-[10px] text-gray-400 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  {chat.phone || '+91 99778 44598'}
-                </div>
+                {/* Middle section with participant info, message preview, and avatars */}
+                <div className="mb-1.5 flex justify-between items-center">
+                  <div className="flex-1 min-w-0">
+                    {/* Group participants info */}
+                    {chat.is_group && (
+                      <div className="text-[10px] text-gray-400 truncate mt-0.5 max-w-[95%]">
+                        {chat.participants && chat.participants.length > 0
+                          ? `${chat.participants[0].user.full_name}${chat.participants.length > 1 ? ` +${chat.participants.length - 1}` : ''}`
+                          : 'No participants'}
+                      </div>
+                    )}
 
-                {/* Labels */}
-                <div className="flex mt-1 space-x-1">
-                  {chat.labels && chat.labels.map((label, index) => (
-                    <div
-                      key={index}
-                      className="px-1.5 py-0.5 rounded text-[10px] text-white"
-                      style={{ backgroundColor: label.color }}
-                    >
-                      {label.name}
+                    {/* Message preview with proper truncation */}
+                    <div className="text-[10px] text-gray-500 truncate mt-0.5 max-w-[95%]">
+                      {chat.last_message ? (
+                        chat.is_group && chat.last_message.sender ?
+                          `${chat.last_message.sender.full_name}: ${chat.last_message.content}` :
+                          chat.last_message.content
+                      ) : 'No messages yet'}
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Display avatars for group chats at middle-right */}
+                  {chat.is_group && chat.participants && chat.participants.length > 0 && (
+                    <div className="flex -space-x-2 ml-1">
+                      {chat.participants.slice(0, 3).map((participant, index) => (
+                        <div key={index} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative shadow-sm">
+                          {participant.user.avatar_url ? (
+                            <Image
+                              src={participant.user.avatar_url}
+                              alt={participant.user.full_name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-[8px] font-semibold">
+                              {participant.user.full_name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {chat.participants.length > 3 && (
+                        <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[8px] text-gray-600 shadow-sm">
+                          +{chat.participants.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom section with phone number and timestamp */}
+                <div className="mt-auto">
+                  {/* Phone number and timestamp in a flex container */}
+                  <div className="flex justify-between items-center">
+                    {/* Phone number in light grey container */}
+                    <div className="flex items-center text-[10px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <span className="bg-gray-100 text-gray-500 rounded-md px-1.5 py-0.5 shadow-sm">
+                        {chat.phone || '+91 99778 44598'}
+                      </span>
+                    </div>
+
+                    {/* Timestamp at bottom-right */}
+                    <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                      {chat.last_message ? formatDate(chat.last_message.created_at) : ''}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

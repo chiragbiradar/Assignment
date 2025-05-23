@@ -35,3 +35,75 @@ body {
   width: 100vw;
   position: relative;
 }
+
+/* Offline mode indicator */
+.offline-mode::before {
+  content: 'You are offline. Messages will be sent when you reconnect.';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #f97316;
+  color: white;
+  text-align: center;
+  padding: 4px;
+  font-size: 14px;
+  z-index: 9999;
+}
+
+/* Adjust content when offline banner is shown */
+.offline-mode main,
+.offline-mode #__next > div {
+  padding-top: 28px;
+}
+
+/* Portal and modal styles */
+#portal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+#portal-root > div {
+  pointer-events: auto;
+}
+
+/* Subtle pulse animation - only used when triggered explicitly */
+@keyframes subtle-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+  }
+
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 5px rgba(22, 163, 74, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
+/* Class for notification indicators */
+.notification-indicator {
+  position: relative;
+}
+
+.notification-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 1px solid white;
+}

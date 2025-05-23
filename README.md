@@ -1,23 +1,104 @@
-# WhatsApp Clone
+# Periskope Clone
 
-A WhatsApp clone built with Next.js, Tailwind CSS, and Supabase.
+A comprehensive Periskope clone built with Next.js, Tailwind CSS, and Supabase, featuring real-time messaging, offline support, and a modern UI.
 
 ## Features
 
-- Real-time messaging
-- User authentication
-- Chat list with search and filtering
-- Message status indicators
-- Offline support with IndexedDB
-- Responsive design
-- Chat labels
-- Group chats
+### Authentication
+- **Email/Password Authentication**: Secure login and registration using Supabase Auth
+- **User Profiles**: User information stored in the database
+- **Session Management**: Persistent sessions with automatic token refresh
+
+### Messaging
+- **Real-time Messaging**: Instant message delivery using Supabase Realtime
+- **1-to-1 Chats**: Private conversations between two users
+- **Group Chats**: Conversations with multiple participants
+- **Message Status Indicators**: Read/unread status for messages
+- **Typing Indicators**: Shows when someone is typing (visual feedback)
+- **Message Timestamps**: Time display for all messages
+
+### Attachments
+- **File Attachments**: Send and receive various file types
+- **Image Attachments**: Send, preview, and view images in chat
+- **Video Attachments**: Send, preview, and play videos in chat
+- **Audio Attachments**: Send and play audio files
+- **Document Attachments**: Share documents with other users
+- **Attachment Preview**: Preview attachments before sending
+- **Drag & Drop Support**: Easy file uploading via drag and drop
+
+### Offline Support
+- **IndexedDB Storage**: Local message storage using Dexie.js
+- **Offline Message Queue**: Send messages while offline
+- **Automatic Sync**: Messages sync when connection is restored
+- **Offline Indicator**: Visual indicator when device is offline
+- **Seamless Experience**: Continue using the app without internet
+
+### UI Components
+- **Responsive Design**: Works on desktop and mobile devices
+- **Chat List**: List of all conversations with search and filtering
+- **Chat Area**: Message display with input field and attachments
+- **Sidebar Navigation**: Easy access to different sections
+- **Group/Contact Info Bar**: Display information about current chat
+- **Floating Action Button**: Quick access to create new chats
+- **Dropdown Menus**: Clean UI with dropdown functionality
+- **Dark Mode Support**: Respects system color scheme preferences
+
+### Navigation & Layout
+- **Z-index Hierarchy**: Proper layering of UI components
+  - Sidebar: Highest z-index (90)
+  - Navbar: Second highest z-index (80)
+  - Content: Lower z-index for proper stacking
+- **Responsive Layout**: Adapts to different screen sizes
+- **Clean Navigation**: Intuitive navigation between chats and features
+
+### Chat Management
+- **Chat Creation**: Create new individual or group chats
+- **Chat Search**: Search for specific chats by name or content
+- **Chat Filtering**: Filter chats by labels or status
+- **Chat Labels**: Organize chats with custom labels
+- **Unread Indicators**: Visual indicators for unread messages
+- **Last Message Preview**: Shows the last message in chat list
+
+### User Experience
+- **Toast Notifications**: Non-intrusive notifications using react-hot-toast
+- **Loading States**: Visual feedback during loading operations
+- **Error Handling**: Graceful error handling with user feedback
+- **Optimistic Updates**: UI updates before server confirmation for better UX
+- **Smooth Transitions**: Subtle animations for a polished feel
+
+### Recent UI Enhancements
+- **Dropdown Menus**: Added to the "More" icon in RightSidebar and list button in top navigation
+- **Logout Functionality**: Moved from standalone button to dropdown menus for cleaner UI
+- **List Button Dropdown**: Added options like Filter Chats, Manage Users, Settings, and Logout
+- **Reduced Button Clutter**: Streamlined UI by consolidating actions into dropdown menus
+- **Subtle Visual Indicators**: Notification dots and status indicators
+- **Consistent Styling**: Uniform button and dropdown styles across the application
+- **Improved Avatar Display**: Better handling of user avatars in group chats
+- **Participant Display**: Shows first participant name followed by +X for group chats
 
 ## Tech Stack
 
-- **Frontend**: Next.js, TypeScript, Tailwind CSS, React Icons
-- **Backend**: Supabase (Authentication, Database, Storage, Realtime)
-- **Offline Storage**: Dexie.js (IndexedDB wrapper)
+- **Frontend**:
+  - Next.js 15.3.2 with App Router
+  - TypeScript for type safety
+  - Tailwind CSS 4 for styling
+  - React 19 for UI components
+  - React Icons for iconography
+
+- **Backend**:
+  - Supabase for authentication, database, storage, and realtime features
+  - PostgreSQL database with RLS policies
+  - Supabase Storage for file attachments
+  - Supabase Realtime for live updates
+
+- **Offline Support**:
+  - Dexie.js 4 for IndexedDB wrapper
+  - Custom sync mechanism for offline/online transitions
+
+- **Development Tools**:
+  - ESLint for code quality
+  - Next.js development server
+  - TypeScript for static type checking
 
 ## Getting Started
 
@@ -65,34 +146,12 @@ The application uses the following database tables:
 
 - **users**: User profiles
 - **chats**: Chat rooms
-- **messages**: Individual messages
+- **messages**: Individual messages with attachment support
 - **chat_participants**: Links users to chats
 - **labels**: Chat labels
 - **chat_labels**: Links labels to chats
 
-## Authentication
-
-The application uses Supabase Authentication with email/password login. When a user signs up:
-
-1. A new auth user is created
-2. A corresponding record is added to the `users` table
-3. The user is redirected to the login page
-
-## Real-time Messaging
-
-Real-time messaging is implemented using Supabase Realtime:
-
-1. Messages are stored in the `messages` table
-2. The application subscribes to changes on the `messages` table
-3. When a new message is inserted, it's immediately displayed to all participants
-
-## Offline Support
-
-Offline support is implemented using Dexie.js:
-
-1. Messages are stored locally in IndexedDB
-2. When offline, messages are marked as "not synced"
-3. When the connection is restored, unsynchronized messages are sent to the server
+For detailed setup instructions, see [SETUP.md](SETUP.md).
 
 ## Deployment
 
@@ -112,4 +171,4 @@ npm start
 
 Alternatively, you can deploy to Vercel:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fwhatsapp-clone)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2FPeriskope-clone)

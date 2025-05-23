@@ -1,6 +1,6 @@
-# WhatsApp Clone - Complete Setup Guide
+# Periskope Clone - Complete Setup Guide
 
-This guide provides comprehensive instructions for setting up the WhatsApp clone project, including both the frontend Next.js application and the Supabase backend.
+This guide provides comprehensive instructions for setting up the Periskope clone project, including both the frontend Next.js application and the Supabase backend.
 
 ## Prerequisites
 
@@ -13,8 +13,8 @@ This guide provides comprehensive instructions for setting up the WhatsApp clone
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/whatsapp-clone.git
-cd whatsapp-clone
+git clone https://github.com/yourusername/Periskope-clone.git
+cd Periskope-clone
 ```
 
 ### 2. Install Dependencies
@@ -29,7 +29,7 @@ npm install
 
 1. Go to [Supabase](https://supabase.com) and sign in or create an account
 2. Click "New Project"
-3. Enter a name for your project (e.g., "WhatsApp Clone")
+3. Enter a name for your project (e.g., "Periskope Clone")
 4. Set a secure database password (save this for future reference)
 5. Choose a region closest to your users
 6. Click "Create new project"
@@ -138,7 +138,7 @@ Test the following features to ensure everything is working correctly:
 ## Project Structure
 
 ```
-whatsapp-clone/
+Periskope-clone/
 ├── public/                  # Static assets
 ├── src/
 │   ├── app/                 # Next.js app router pages

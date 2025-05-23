@@ -1,4 +1,4 @@
--- WhatsApp Clone - Sample Data for Testing
+-- Periskope Clone - Sample Data for Testing
 -- Run this script after setting up the database structure to populate it with test data
 
 -- Sample Users

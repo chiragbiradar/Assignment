@@ -1,4 +1,4 @@
--- WhatsApp Clone - Complete Supabase Setup Script
+-- Periskope Clone - Complete Supabase Setup Script
 -- Run this in the Supabase SQL Editor to set up all required database objects
 
 -- Enable necessary extensions
@@ -108,9 +108,9 @@ RETURNS VOID AS $$
 BEGIN
   UPDATE messages
   SET is_read = TRUE
-  WHERE 
-    chat_id = p_chat_id AND 
-    sender_id != p_user_id AND 
+  WHERE
+    chat_id = p_chat_id AND
+    sender_id != p_user_id AND
     is_read = FALSE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -279,22 +279,55 @@ USING (
 BEGIN;
   -- Drop the publication if it exists
   DROP PUBLICATION IF EXISTS supabase_realtime;
-  
+
   -- Create a new publication for all tables
   CREATE PUBLICATION supabase_realtime FOR TABLE messages, chats, chat_participants;
 COMMIT;
 
 -- =============================================
+-- CHAT SYSTEM TABLES
+-- =============================================
+
+-- Table for storing chat conversations
+CREATE TABLE IF NOT EXISTS chats (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT, -- NULL for 1-to-1 chats, name for group chats
+  is_group BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- Table for storing chat participants
+CREATE TABLE IF NOT EXISTS chat_participants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(chat_id, user_id)
+);
+
+-- Table for storing chat messages
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  is_read BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Create indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_chat_participants_chat_id ON chat_participants(chat_id);
+CREATE INDEX IF NOT EXISTS idx_chat_participants_user_id ON chat_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
+
+-- =============================================
 -- SAMPLE DATA (OPTIONAL)
 -- =============================================
 
--- Insert sample labels
-INSERT INTO labels (id, name, color) VALUES 
-  ('11111111-1111-1111-1111-111111111111', 'Internal', '#4CAF50'),
-  ('22222222-2222-2222-2222-222222222222', 'Demo', '#FFC107'),
-  ('33333333-3333-3333-3333-333333333333', 'Urgent', '#F44336'),
-  ('44444444-4444-4444-4444-444444444444', 'Content', '#2196F3'),
-  ('55555555-5555-5555-5555-555555555555', 'Signup', '#9C27B0');
+-- Sample data has been removed to keep only schema definitions
 
 -- =============================================
 -- INDEXES FOR PERFORMANCE
